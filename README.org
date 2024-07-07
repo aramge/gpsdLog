@@ -5,11 +5,11 @@ Log GPS data from gpsd, simplify it and store it as a daily gpx track
 
 Should work on linux and similar systems. I run it on a Raspberry Pi Zero on my boat.
 
-Install https://gpsd.gitlab.io/gpsd
+Install [[gpsd][https://gpsd.gitlab.io/gpsd]]
 
-Create a ramdisk. Eventually add it to =/etc/fstab=. The ramdisk should be big enough to hold the logfiles.
+Create a ramdisk. Eventually add it to ~/etc/fstab~. The ramdisk should be big enough to hold the logfiles.
 
-~log_gpspipe.sh~: Log the GPS data from the =gpsd= in NMEA format with ~gpspipe~. I am only interested in the sentences GGA for position, hdop and RMC for position, cog, sog. The log file is stored on the ramdisk.
+~log_gpspipe.sh~: Log the GPS data from the ~gpsd~ in NMEA format with ~gpspipe~. I am only interested in the sentences GGA for position, hdop and RMC for position, cog, sog. The log file is stored on the ramdisk.
 
 Start ~log_gpspipe.sh~ with cron, e.g. every hour. The ~gpspipe~ should run the same length of time.
 
