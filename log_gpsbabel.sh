@@ -1,11 +1,10 @@
 #!/usr/bin/bash
 
-
 LOGFILES=$(ls /media/ramdisk/gpsd*.nmea)
-ANZAHL=$(echo "$LOGFILES" | wc | awk '{ print $1 }') 
-FILES=$(echo "$LOGFILES" | head -n $((ANZAHL-1)))
+COUNT=$(echo "$LOGFILES" | wc | awk '{ print $1 }') 
+FILES=$(echo "$LOGFILES" | head -n $((COUNT-1)))
 
-if [ "$ANZAHL" -gt 1 ] # Liegen neue (ältere gpsd-Logdateien vor?
+if [ "$COUNT" -gt 1 ] # There are older, unprocessed nmea log files
 then
   gpsbabel \
     -t \
