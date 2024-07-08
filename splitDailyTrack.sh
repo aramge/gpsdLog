@@ -33,29 +33,29 @@ fi
 TRKTIMES="$(cat "$TMPFILE" | perl -0777 -pe 's|<metadata>.*?</metadata>||sg' | grep -o "20.*Z" )"
 EARLIEST="$(echo -e "$TRKTIMES" | head -n 1 )"
 LATEST="$(echo "$TRKTIMES" | tail -n 1 )"
-TODAY0="$(TZ=z date +%Y-%m-%dT00:00:00Z)"
+TODAYBOD="$(TZ=z date +%Y-%m-%dT00:00:00Z)"
 # Beginning of day -> First trackpoint
-EARLIEST1="$(TZ=z date -d "$EARLIEST" +%Y-%m-%dT00:00:00Z)"
+FIRSTDAYBOD="$(TZ=z date -d "$EARLIEST" +%Y-%m-%dT00:00:00Z)"
 # Beginning of next day -> Last trackpoint
-EARLIEST2=$(TZ=z date -d "$EARLIEST1 + 1 day" +%Y-%m-%dT00:00:00Z)
+FIRSTDAYEOD=$(TZ=z date -d "$EARLIESTBOD + 1 day" +%Y-%m-%dT00:00:00Z)
 
 if [[ "$LATEST" < "$TODAY0" ]]
 then
   echo Splitting
   START=$(echo $EARLIEST | passdigits)
-  STOP=$(echo $EARLIEST2 | passdigits)
+  STOP=$(echo $FIRSTDAYEOD | passdigits)
   LATEST=$(echo $LATEST | passdigits)
 echo Start $START
 echo Stop $STOP
 echo LATEST $LATEST
-  if [ -f "$TARGET"_"$EARLIEST2.gpx" ]
+  if [ -f "$TARGET"_"$FIRSTDAYEOD.gpx" ]
   then
-    echo "$TARGET"_"$EARLIEST2.gpx" exists. Will not overwrite
+    echo "$TARGET"_"$FIRSTDAYEOD.gpx" exists. Will not overwrite
     finish
   else
     # Write the first day
-    gpsbabel -i gpx -f "$TMPFILE" -x track,start="$START",stop="$STOP" -o gpx -F "$TARGET"_"$EARLIEST2.gpx"
-    touch -d "$EARLIEST2" "$TARGET"_"$EARLIEST2.gpx"
+    gpsbabel -i gpx -f "$TMPFILE" -x track,start="$START",stop="$STOP" -o gpx -F "$TARGET"_"$FIRSTDAYEOD.gpx"
+    touch -d "$FIRSTDAYEOD" "$TARGET"_"$FIRSTDAYEOD.gpx"
   fi
   # Write the remaining days
   gpsbabel -i gpx -f "$TMPFILE" -x track,start="$STOP",stop="$LATEST" -o gpx -F "$TMPFILE2"
