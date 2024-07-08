@@ -1,8 +1,7 @@
 #!/usr/bin/bash
 
 RAMDISK=/media/ramdisk
-STORAGE=/home/ramge/local/tracks
-ERROR=0.001k
+ERROR=0.005k
 
 if [[ $1 != +([0-9]) ]]
 then
@@ -11,7 +10,7 @@ then
   exit 1
 fi 
 
-gpspipe -r -x $1 \
+gpspipe -r -x "$1" \
   | grep '$GNGGA\|$GNRMC' \
   | tail -n +4 \
   > "$RAMDISK/gpsd_$(TZ=z date +%Y-%m-%dT%H:%M:%SZ).nmea"
