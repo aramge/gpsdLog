@@ -1,6 +1,7 @@
 #!/usr/bin/bash
 
 RAMDISK=/media/ramdisk
+TARGET=/home/ramge/local/tracks/gpsd.gpx
 ERROR=0.005k
 
 if [[ $1 != +([0-9]) ]]
@@ -28,14 +29,14 @@ then
     -x simplify,crosstrack,error="$ERROR" \
     -o gpx \
     -F $RAMDISK/nmea.gpx
-  if [ -f $RAMDISK/gpsd.gpx ]
+  if [ -f "$TARGET" ]
   then
     gpsbabel \
       -t \
       -i gpx \
       -f $RAMDISK/nmea.gpx \
       -i gpx \
-      -f $RAMDISK/gpsd.gpx \
+      -f "$TARGET" \
       -x track,merge \
       -x simplify,crosstrack,error="$ERROR" \
       -o gpx \
@@ -43,7 +44,7 @@ then
     rm $RAMDISK/nmea.gpx
     mv $RAMDISK/tmp.gpx $RAMDISK/nmea.gpx
   fi
-  mv $RAMDISK/nmea.gpx $RAMDISK/gpsd.gpx
+  mv $RAMDISK/nmea.gpx "$TARGET"
   echo "$NMEA" | xargs rm 
 fi
 

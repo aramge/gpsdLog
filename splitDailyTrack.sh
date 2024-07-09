@@ -1,20 +1,32 @@
 #!/usr/bin/bash
 
-RAMDISK=/media/ramdisk
-SOURCE=$RAMDISK/gpsd.gpx
+# RAMDISK=/media/ramdisk
+# SOURCE=/home/ramge/local/tracks/gpsd.gpx
+# TARGETS=/home/ramge/local/tracks/gpsd
+RAMDISK=/home/ramge/tmp
+SOURCE=/home/ramge/tmp/crosstrack.gpx
+TARGETS=/home/ramge/tmp/gpsd
 TMPFILE=$RAMDISK/splitDailyTracks.gpx
 TMPFILE2=$RAMDISK/splitDailyTracks2.gpx
-TARGET=/home/ramge/local/tracks/gpsd
 
 # filter out anything but digits
 passdigits () {
-  sed 's/[^0-9]//g' | head -c 14
+  echo "$1" | sed 's/[^0-9]//g' | head -c 14
+}
+
+trktimes () {
+  perl -0777 -pe 's|<time>.*?</time>||' < "$1" | grep -o "20.*Z"
 }
 
 finish () {
-  echo cleaning up
-  rm $TMPFILE
-  echo Done!
+  if [ -f "$TMPFILE" ]
+  then 
+    rm "$TMPFILE"
+  fi
+  if [ -f "$TMPFILE2" ]
+  then 
+    rm "$TMPFILE2"
+  fi
   exit 0
 }
 
@@ -29,39 +41,43 @@ else
   cp "$SOURCE" "$TMPFILE"
 fi
 
-# Find all track point times, get rid of the metadata (delete creation time)
-TRKTIMES="$(cat "$TMPFILE" | perl -0777 -pe 's|<metadata>.*?</metadata>||sg' | grep -o "20.*Z" )"
-EARLIEST="$(echo -e "$TRKTIMES" | head -n 1 )"
-LATEST="$(echo "$TRKTIMES" | tail -n 1 )"
-TODAYBOD="$(TZ=z date +%Y-%m-%dT00:00:00Z)"
-# Beginning of day -> First trackpoint
-FIRSTDAYBOD="$(TZ=z date -d "$EARLIEST" +%Y-%m-%dT00:00:00Z)"
+# Find all track point times, get rid of the first occurance. (This is the creation time of the file)
+TRKTIMES=$(trktimes "$TMPFILE")
+EARLIEST="$(echo "$TRKTIMES" | head -n 1 )"
+ echo "$EARLIEST"
 # Beginning of next day -> Last trackpoint
-FIRSTDAYEOD=$(TZ=z date -d "$EARLIESTBOD + 1 day" +%Y-%m-%dT00:00:00Z)
+FIRSTDAYEOD=$(TZ=z date -d "$EARLIEST + 1 day" +%Y-%m-%dT00:00:00Z)
+ echo "$FIRSTDAYEOD"
 
-if [[ "$LATEST" < "$TODAY0" ]]
+echo Splitting
+if [ -f "$TARGETS"_"$FIRSTDAYEOD.gpx" ]
 then
-  echo Splitting
-  START=$(echo $EARLIEST | passdigits)
-  STOP=$(echo $FIRSTDAYEOD | passdigits)
-  LATEST=$(echo $LATEST | passdigits)
-echo Start $START
-echo Stop $STOP
-echo LATEST $LATEST
-  if [ -f "$TARGET"_"$FIRSTDAYEOD.gpx" ]
-  then
-    echo "$TARGET"_"$FIRSTDAYEOD.gpx" exists. Will not overwrite
-    finish
-  else
-    # Write the first day
-    gpsbabel -i gpx -f "$TMPFILE" -x track,start="$START",stop="$STOP" -o gpx -F "$TARGET"_"$FIRSTDAYEOD.gpx"
-    touch -d "$FIRSTDAYEOD" "$TARGET"_"$FIRSTDAYEOD.gpx"
-  fi
-  # Write the remaining days
-  gpsbabel -i gpx -f "$TMPFILE" -x track,start="$STOP",stop="$LATEST" -o gpx -F "$TMPFILE2"
-  mv $TMPFILE2 $TMPFILE
+  echo "$TARGETS"_"$FIRSTDAYEOD.gpx" exists. Will not overwrite
+  finish
+else
+#  echo earliest start "$(passdigits "$EARLIEST")"
+#  echo firstdayeod stop "$(passdigits "$FIRSTDAYEOD")"
+  gpsbabel \
+    -i gpx \
+    -f "$TMPFILE" \
+    -x track,stop=$(passdigits "$FIRSTDAYEOD") \
+    -o gpx \
+    -F "$TARGETS"_"$FIRSTDAYEOD".gpx
+  touch -d "$FIRSTDAYEOD" "$TARGETS"_"$FIRSTDAYEOD".gpx
   # Recurr with the remaining days, start this script again
-  "$0"
-  exit 0
+  gpsbabel \
+    -i gpx \
+    -f "$TMPFILE" \
+    -x track,start=$(passdigits "$FIRSTDAYEOD") \
+    -o gpx \
+    -F "$TMPFILE2"
+  grep -q trk "$TMPFILE2" && {
+    if [ -f "$TMPFILE2" ]
+    then 
+      mv "$TMPFILE2" "$TMPFILE"
+      "$0"
+    fi
+  }
 fi
 
+finish
