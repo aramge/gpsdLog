@@ -16,15 +16,15 @@ gpspipe -r -x "$1" \
   | tail -n +4 \
   > "$RAMDISK/gpsd_$(TZ=z date +%Y-%m-%dT%H:%M:%SZ).nmea"
 
-NMEA=$(ls $RAMDISK/gpsd*.nmea | head -n -1)
-COUNT=$(echo "$NMEA" | wc | awk '{ print $1 }')
+NMEAS=$(ls $RAMDISK/gpsd*.nmea | head -n -1)
+COUNT=$(echo "$NMEAS" | wc | awk '{ print $1 }')
 
 if [ "$COUNT" -ge 1 ] # There are older, unprocessed nmea log files
 then
   gpsbabel \
     -t \
     -i nmea \
-    $(for i in $NMEA ; do echo -n "$i" | xargs echo "-f" ; done) \
+    $(for i in $NMEAS ; do echo -n "$i" | xargs echo "-f" ; done) \
     -x track,merge \
     -x simplify,crosstrack,error="$ERROR" \
     -o gpx \
@@ -45,6 +45,6 @@ then
     mv $RAMDISK/tmp.gpx $RAMDISK/nmea.gpx
   fi
   mv $RAMDISK/nmea.gpx "$TARGET"
-  echo "$NMEA" | xargs rm 
+  echo "$NMEAS" | xargs rm 
 fi
 
