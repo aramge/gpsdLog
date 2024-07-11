@@ -7,7 +7,7 @@ Type=simple
 Restart=always
 RestartSec=1
 User=ramge
-ExecStart=/home/ramge/gh/gpsdLog/gpsdLog.sh 3600
+ExecStart=/home/ramge/gh/gpsdLog/gpsdLog.sh 600
 
 [Install]
 WantedBy=multi-user.target
