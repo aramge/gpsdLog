@@ -7,7 +7,7 @@ ERROR=0.005k
 if [[ $1 != +([0-9]) ]]
 then
   echo Usage: $0 SECONDS
-  echo usually started from cron. Therefore SECONDS should be the same as the cron interval
+  echo usually started from systemd. See gpsdLog.service.
   exit 1
 fi 
 
